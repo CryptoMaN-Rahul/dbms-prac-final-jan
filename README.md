@@ -31,7 +31,7 @@
      - File: `dir.sql`
 
 5. **Run the Application:**
-   - Open a web browser and navigate to `http://localhost/dbproj/employee.php`.
+   - Open a web browser and navigate to `http://localhost/dbproj/emploeee.php`.
 
 **Database Tables**
 
