@@ -53,8 +53,6 @@ mysqli_close($conn);
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Departments Page</title>
 </head>
 <body>
@@ -85,24 +83,24 @@ mysqli_close($conn);
 </form>
 
 <h2>All Departments</h2>
-<table style="border-collapse: collapse; width: 100%;">
+<table border="1" style="border-collapse: collapse; width: 100%;">
     <tr>
-        <th style="border: 1px solid #ddd; padding: 8px;">ID</th>
-        <th style="border: 1px solid #ddd; padding: 8px;">Department Name</th>
-        <th style="border: 1px solid #ddd; padding: 8px;">Department Location</th>
+        <th>ID</th>
+        <th>Department Name</th>
+        <th >Department Location</th>
     </tr>
     <?php
     // Display all departments
     if (mysqli_num_rows($resultDepartments) > 0) {
         while ($row = mysqli_fetch_assoc($resultDepartments)) {
             echo "<tr>";
-            echo "<td style='border: 1px solid #ddd; padding: 8px;'>" . $row["id"] . "</td>";
-            echo "<td style='border: 1px solid #ddd; padding: 8px;'>" . $row["name"] . "</td>";
-            echo "<td style='border: 1px solid #ddd; padding: 8px;'>" . $row["location"] . "</td>";
+            echo "<td >" . $row["id"] . "</td>";
+            echo "<td >" . $row["name"] . "</td>";
+            echo "<td >" . $row["location"] . "</td>";
             echo "</tr>";
         }
     } else {
-        echo "<tr><td colspan='3' style='border: 1px solid #ddd; padding: 8px;'>No departments found.</td></tr>";
+        echo "<tr><td colspan='3'>No departments found.</td></tr>";
     }
     ?>
 </table>
