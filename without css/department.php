@@ -5,11 +5,11 @@ $username = "root";
 $password = "";
 $dbname = "dir";
 
-$conn = new mysqli($servername, $username, $password, $dbname);
+$conn = mysqli_connect($servername, $username, $password, $dbname);
 
 // Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+if (!$conn) {
+    die("Connection failed: " . mysqli_connect_error());
 }
 
 // CREATE operation
@@ -20,16 +20,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["create"])) {
     // Insert data into the departments table
     $sql = "INSERT INTO departments (name, location) VALUES ('$name', '$location')";
 
-    if ($conn->query($sql) === TRUE) {
+    if (mysqli_query($conn, $sql)) {
         echo "Department created successfully!";
     } else {
-        echo "Error: " . $sql . "<br>" . $conn->error;
+        echo "Error: " . mysqli_error($conn);
     }
 }
 
 // READ operation - Fetch all departments
-$sqlFetchDepartments = "SELECT * FROM departments";
-$resultDepartments = $conn->query($sqlFetchDepartments);
+$resultDepartments = mysqli_query($conn, "SELECT * FROM departments");
 
 // UPDATE operation
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["update"])) {
@@ -40,15 +39,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["update"])) {
     // Update data in the departments table
     $sql = "UPDATE departments SET name='$name', location='$location' WHERE id=$id";
 
-    if ($conn->query($sql) === TRUE) {
+    if (mysqli_query($conn, $sql)) {
         echo "Department updated successfully!";
     } else {
-        echo "Error: " . $sql . "<br>" . $conn->error;
+        echo "Error: " . mysqli_error($conn);
     }
 }
 
 // Close the database connection
-$conn->close();
+mysqli_close($conn);
 ?>
 
 <!DOCTYPE html>
@@ -61,7 +60,7 @@ $conn->close();
 <body>
 
 <h2>Create Department</h2>
-<form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">
+<form method="post">
     <label for="departmentName">Department Name:</label>
     <input type="text" id="departmentName" name="name" required><br>
 
@@ -72,7 +71,7 @@ $conn->close();
 </form>
 
 <h2>Update Department</h2>
-<form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">
+<form method="post">
     <label for="updateDepartmentId">Department ID to Update:</label>
     <input type="text" id="updateDepartmentId" name="id" required><br>
 
@@ -86,18 +85,27 @@ $conn->close();
 </form>
 
 <h2>All Departments</h2>
-<?php
-// Display all departments
-if ($resultDepartments->num_rows > 0) {
-    while ($row = $resultDepartments->fetch_assoc()) {
-        echo "ID: " . $row["id"] . "<br>";
-        echo "Department Name: " . $row["name"] . "<br>";
-        echo "Department Location: " . $row["location"] . "<br><hr>";
+<table style="border-collapse: collapse; width: 100%;">
+    <tr>
+        <th style="border: 1px solid #ddd; padding: 8px;">ID</th>
+        <th style="border: 1px solid #ddd; padding: 8px;">Department Name</th>
+        <th style="border: 1px solid #ddd; padding: 8px;">Department Location</th>
+    </tr>
+    <?php
+    // Display all departments
+    if (mysqli_num_rows($resultDepartments) > 0) {
+        while ($row = mysqli_fetch_assoc($resultDepartments)) {
+            echo "<tr>";
+            echo "<td style='border: 1px solid #ddd; padding: 8px;'>" . $row["id"] . "</td>";
+            echo "<td style='border: 1px solid #ddd; padding: 8px;'>" . $row["name"] . "</td>";
+            echo "<td style='border: 1px solid #ddd; padding: 8px;'>" . $row["location"] . "</td>";
+            echo "</tr>";
+        }
+    } else {
+        echo "<tr><td colspan='3' style='border: 1px solid #ddd; padding: 8px;'>No departments found.</td></tr>";
     }
-} else {
-    echo "No departments found.";
-}
-?>
+    ?>
+</table>
 
 </body>
 </html>
