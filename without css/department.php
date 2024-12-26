@@ -12,16 +12,24 @@ if (!$conn) {
     die("Connection failed: " . mysqli_connect_error());
 }
 
-// CREATE operation
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["create"])) {
+// Handle form submissions
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $name = $_POST["name"];
     $location = $_POST["location"];
 
-    // Insert data into the departments table
-    $sql = "INSERT INTO departments (name, location) VALUES ('$name', '$location')";
+    if (isset($_POST["create"])) {
+        // CREATE operation
+        $sql = "INSERT INTO departments (name, location) VALUES ('$name', '$location')";
+        $message = "Department created successfully!";
+    } elseif (isset($_POST["update"])) {
+        // UPDATE operation
+        $id = $_POST["id"];
+        $sql = "UPDATE departments SET name='$name', location='$location' WHERE id=$id";
+        $message = "Department updated successfully!";
+    }
 
     if (mysqli_query($conn, $sql)) {
-        echo "Department created successfully!";
+        echo $message;
     } else {
         echo "Error: " . mysqli_error($conn);
     }
@@ -29,22 +37,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["create"])) {
 
 // READ operation - Fetch all departments
 $resultDepartments = mysqli_query($conn, "SELECT * FROM departments");
-
-// UPDATE operation
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["update"])) {
-    $id = $_POST["id"];
-    $name = $_POST["name"];
-    $location = $_POST["location"];
-
-    // Update data in the departments table
-    $sql = "UPDATE departments SET name='$name', location='$location' WHERE id=$id";
-
-    if (mysqli_query($conn, $sql)) {
-        echo "Department updated successfully!";
-    } else {
-        echo "Error: " . mysqli_error($conn);
-    }
-}
 
 // Close the database connection
 mysqli_close($conn);
@@ -82,21 +74,25 @@ mysqli_close($conn);
     <input type="submit" name="update" value="Update Department">
 </form>
 
+<br>
+
+<button onclick="window.location.href='employee.php';">Go to Employee Management</button>
+
 <h2>All Departments</h2>
 <table border="1" style="border-collapse: collapse; width: 100%;">
     <tr>
         <th>ID</th>
         <th>Department Name</th>
-        <th >Department Location</th>
+        <th>Department Location</th>
     </tr>
     <?php
     // Display all departments
     if (mysqli_num_rows($resultDepartments) > 0) {
         while ($row = mysqli_fetch_assoc($resultDepartments)) {
             echo "<tr>";
-            echo "<td >" . $row["id"] . "</td>";
-            echo "<td >" . $row["name"] . "</td>";
-            echo "<td >" . $row["location"] . "</td>";
+            echo "<td>" . $row["id"] . "</td>";
+            echo "<td>" . $row["name"] . "</td>";
+            echo "<td>" . $row["location"] . "</td>";
             echo "</tr>";
         }
     } else {
@@ -107,3 +103,9 @@ mysqli_close($conn);
 
 </body>
 </html>
+
+<!-- 
+Changes made:
+1. Combined the form submission handling into a single block.
+2. Used a variable `$message` to store the success message.
+3. Created a button that link to employee.php for faster access to page -->

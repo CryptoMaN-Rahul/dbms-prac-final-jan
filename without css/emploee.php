@@ -8,76 +8,56 @@ $dbname = "dir";
 $conn = new mysqli($servername, $username, $password, $dbname);
 
 // Check connection
-if (!$conn) {
+if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-// CREATE operation
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["create"])) {
-    $employee_ssn = $_POST["employee_ssn"];
-    $name = $_POST["name"];
-    $salary = $_POST["salary"];
-    $department_id = $_POST["department_id"];
+// Handle form submissions
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $employee_ssn = $_POST["employee_ssn"] ?? null;
+    $name = $_POST["name"] ?? null;
+    $salary = $_POST["salary"] ?? null;
+    $department_id = $_POST["department_id"] ?? null;
+    $id = $_POST["id"] ?? null;
+    $searchTerm = $_POST["searchTerm"] ?? null;
 
-    // Insert data into the employees table
-    $sql = "INSERT INTO employees (employee_ssn, name, salary, department_id) VALUES ('$employee_ssn', '$name', '$salary', '$department_id')";
+    if (isset($_POST["create"])) {
+        // CREATE operation
+        $sql = "INSERT INTO employees (employee_ssn, name, salary, department_id) VALUES ('$employee_ssn', '$name', '$salary', '$department_id')";
+        $message = "Employee created successfully!";
+    } elseif (isset($_POST["update"])) {
+        // UPDATE operation
+        $sql = "UPDATE employees SET salary='$salary', department_id='$department_id' WHERE id=$id";
+        $message = "Employee updated successfully!";
+    } elseif (isset($_POST["delete"])) {
+        // DELETE operation
+        $sql = "DELETE FROM employees WHERE id=$id";
+        $message = "Employee deleted successfully!";
+    } elseif (isset($_POST["search"])) {
+        // SEARCH operation
+        $sqlSearch = "SELECT employees.id, employee_ssn, employees.name, salary, departments.name AS department_name, location
+                      FROM employees
+                      LEFT JOIN departments ON employees.department_id = departments.id
+                      WHERE employees.name LIKE '%$searchTerm%'";
+        $resultEmployees = mysqli_query($conn, $sqlSearch);
+    }
 
-    if (mysqli_query($conn, $sql)) {
-        echo "Employee created successfully!";
+    if (isset($sql) && mysqli_query($conn, $sql)) {
+        echo $message;
+        if (isset($_POST["update"]) || isset($_POST["delete"])) {
+            echo "<script>setTimeout(function(){ location.reload(); }, 100);</script>";
+        }
     } else {
         echo "Error: " . mysqli_error($conn);
     }
 }
 
-// READ operation - Fetch all employees or searched employees
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["search"])) {
-    $searchTerm = $_POST["searchTerm"];
-    // Search for employees whose names contain the search term
-    $sqlSearch = "SELECT employees.id, employee_ssn, employees.name, salary, departments.name AS department_name, location
-                  FROM employees
-                  LEFT JOIN departments ON employees.department_id = departments.id
-                  WHERE employees.name LIKE '%$searchTerm%'";
-    $resultEmployees = mysqli_query($conn, $sqlSearch);
-} else {
-    // Fetch all employees
+// READ operation - Fetch all employees if not searching
+if (!isset($resultEmployees)) {
     $sqlFetchEmployees = "SELECT employees.id, employee_ssn, employees.name, salary, departments.name AS department_name, location
                           FROM employees
                           LEFT JOIN departments ON employees.department_id = departments.id";
     $resultEmployees = mysqli_query($conn, $sqlFetchEmployees);
-}
-
-// UPDATE operation
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["update"])) {
-    $id = $_POST["id"];
-    $salary = $_POST["salary"];
-    $department_id = $_POST["department_id"];
-
-    // Update data in the employees table
-    $sql = "UPDATE employees SET salary='$salary', department_id='$department_id' WHERE id=$id";
-
-    if (mysqli_query($conn, $sql)) {
-        echo "Employee updated successfully!";
-        echo "<script>setTimeout(function(){ location.reload(); }, 100);</script>";
-
-    } else {
-        echo "Error: " . mysqli_error($conn);
-    }
-}
-
-// DELETE operation
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["delete"])) {
-    $id = $_POST["id"];
-
-    // Delete data from the employees table
-    $sql = "DELETE FROM employees WHERE id=$id";
-
-    if (mysqli_query($conn, $sql)) {
-        echo "Employee deleted successfully!";
-        echo "<script>setTimeout(function(){ location.reload(); }, 100);</script>";
-
-    } else {
-        echo "Error: " . mysqli_error($conn);
-    }
 }
 
 // Close the database connection
@@ -108,6 +88,10 @@ mysqli_close($conn);
     <input type="submit" name="create" value="Add Employee">
 </form>
 
+<br>
+<!-- Button to connect to department.php -->
+<button onclick="window.location.href='department.php';">Go to Department Management</button>
+
 <h2>Search Employee</h2>
 <form method="post">
     <label for="searchTerm">Search by Employee Name:</label>
@@ -129,7 +113,7 @@ mysqli_close($conn);
     </tr>
     <?php
     // Display all employees or searched employees
-    if (isset($resultEmployees) && $resultEmployees->num_rows > 0) {
+    if ($resultEmployees && $resultEmployees->num_rows > 0) {
         while ($row = mysqli_fetch_assoc($resultEmployees)) {
             echo "<tr>";
             echo "<td>" . $row["id"] . "</td>";
@@ -166,7 +150,9 @@ mysqli_close($conn);
     }
     ?>
 </table>
-
 </body>
 </html>
 
+<!-- 
+1. Created a button that link to department.php for faster access to page 
+-->
